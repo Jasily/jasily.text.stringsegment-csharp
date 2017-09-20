@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>Jasily.Text.StringSegment</id>
+        <version>0.1.0.1</version>
+        <title>Jasily.Text.StringSegment</title>
+        <authors>Jasily</authors>
+        <owners>Jasily</owners>
+        <licenseUrl>https://github.com/Jasily/jasily.text.stringsegment-csharp/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/Jasily/jasily.text.stringsegment-csharp</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A StringSegment for .NET standard.
+NEED MORE TEST !</description>
+        <summary>A StringSegment for .NET standard.</summary>
+        <copyright>Copyright 2017</copyright>
+        <tags>String StringSegment Jasily</tags>
+    </metadata>
+    <files>
+        <file src="bin\Release\netstandard2.0\Jasily.Text.StringSegment.dll" target="lib\netstandard2.0\Jasily.Text.StringSegment.dll" />
+        <file src="bin\Release\netstandard2.0\Jasily.Text.StringSegment.xml" target="lib\netstandard2.0\Jasily.Text.StringSegment.xml" />
+    </files>
+</package>
