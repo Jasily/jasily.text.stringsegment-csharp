@@ -86,9 +86,8 @@ namespace Jasily.Text
         public int IndexOf([NotNull] string value, StringComparison comparison = StringComparison.Ordinal)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            this.EnsureNotNull();
 
-            // ReSharper disable once PossibleNullReferenceException
+            if (this.Buffer == null) return -1;
             var index = this.Buffer.IndexOf(value, this.Offset, this.Length, comparison);
             return index >= 0 ? index - this.Offset : index;
         }
@@ -98,9 +97,8 @@ namespace Jasily.Text
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (startIndex < 0 || startIndex > this.Length) throw new ArgumentOutOfRangeException(nameof(startIndex));
-            this.EnsureNotNull();
 
-            // ReSharper disable once PossibleNullReferenceException
+            if (this.Buffer == null) return -1;
             var index = this.Buffer.IndexOf(value, this.Offset + startIndex, this.Length - startIndex, comparison);
             return index >= 0 ? index - this.Offset : index;
         }
@@ -111,9 +109,8 @@ namespace Jasily.Text
             if (value == null) throw new ArgumentNullException(nameof(value));
             if (startIndex < 0 || startIndex > this.Length) throw new ArgumentOutOfRangeException(nameof(startIndex));
             if (count < 0 || count > this.Length) throw new ArgumentOutOfRangeException(nameof(count));
-            this.EnsureNotNull();
 
-            // ReSharper disable once PossibleNullReferenceException
+            if (this.Buffer == null) return -1;
             var index = this.Buffer.IndexOf(value, this.Offset + startIndex, count, comparison);
             return index >= 0 ? index - this.Offset : index;
         }
@@ -123,6 +120,31 @@ namespace Jasily.Text
         #region index of StringSegment
 
 
+
+        #endregion
+
+        #region index of next
+
+        /// <summary>
+        /// Search the next <see cref="char.IsWhiteSpace(char)"/> start by <paramref name="startIndex"/>.
+        /// </summary>
+        /// <param name="startIndex"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public int IndexOfWhiteSpace(int startIndex = 0)
+        {
+            if (startIndex < 0 || startIndex > this.Length) throw new ArgumentOutOfRangeException(nameof(startIndex));
+
+            if (this.Buffer == null) return -1;
+            for (var i = startIndex; i < this.Length; i++)
+            {
+                if (char.IsWhiteSpace(this.Buffer, this.Offset + i))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
 
         #endregion
     }

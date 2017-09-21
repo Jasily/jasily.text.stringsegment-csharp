@@ -5,12 +5,22 @@ namespace Jasily.Text
 {
     public partial struct StringSegment
     {
+        /// <summary>
+        /// Same as <see cref="string.IsNullOrEmpty"/>.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         [PublicAPI, Pure]
         public static bool IsNullOrEmpty(StringSegment value)
         {
             return value.Length == 0;
         }
 
+        /// <summary>
+        /// Same as <see cref="string.IsNullOrWhiteSpace"/>.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         [PublicAPI, Pure]
         public static bool IsNullOrWhiteSpace(StringSegment value)
         {

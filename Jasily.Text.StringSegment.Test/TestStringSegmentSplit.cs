@@ -24,6 +24,7 @@ namespace Jasily.Text.Test
         {
             IEnumerable<char[]> Separators()
             {
+                yield return null;
                 yield return new char[0];
                 yield return new[] { '4' };
                 yield return new[] { '4', '5' };
@@ -77,7 +78,9 @@ namespace Jasily.Text.Test
         {
             IEnumerable<string[]> Separators()
             {
+                yield return null;
                 yield return new string[0];
+                yield return new[] { "" };
                 yield return new[] { "4" };
                 yield return new[] { "4", "5" };
             }
