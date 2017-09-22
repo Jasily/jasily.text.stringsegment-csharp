@@ -4,80 +4,107 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+// ReSharper disable InheritdocConsiderUsage
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Jasily.Text
 {
     public partial struct StringSegment
     {
-        private interface ISpiterEnumerator
+        #region API: split
+
+        /// <summary>
+        /// See <see cref="string.Split(string[], StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public StringsSpliter Split(string separator, StringSplitOptions options = StringSplitOptions.None)
         {
-            StringSegment Value { get; }
-
-            int Count { get; }
-
-            int Limit { get; }
-
-            int Index { get; }
-
-            StringSplitOptions Options { get; }
+            return new StringsSpliter(ref this, new[] {separator}, int.MaxValue, options);
         }
 
-        private class SpliterHelper
+        /// <summary>
+        /// See <see cref="string.Split(string[], StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public StringsSpliter Split([CanBeNull] string[] separator, StringSplitOptions options = StringSplitOptions.None)
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool HasNext<T>(ref T itor) where T : ISpiterEnumerator
-            {
-                if (itor.Value.Buffer == null)
-                {
-                    return false;
-                }
-
-                if (itor.Limit >= 0 && itor.Count >= itor.Limit)
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static bool HasEnd<T>(ref T itor) where T : ISpiterEnumerator
-            {
-                var valLen = itor.Value.Length;
-
-                if (itor.Index > valLen)
-                {
-                    return false;
-                }
-
-                if (valLen == itor.Index && itor.Options == StringSplitOptions.RemoveEmptyEntries)
-                {
-                    return false;
-                }
-
-                return true;
-            }
+            return new StringsSpliter(ref this, separator, int.MaxValue, options);
         }
 
-        public StringsSpliter Split(string separator)
-        {
-            this.EnsureNotNull();
-            return new StringsSpliter(this, new[] {separator}, -1, StringSplitOptions.None);
-        }
-
-        public StringsSpliter Split([CanBeNull] string[] separator, StringSplitOptions options)
-        {
-            this.EnsureNotNull();
-            return new StringsSpliter(this, separator, -1, options);
-        }
-
-        public StringsSpliter Split([CanBeNull] string[] separator, int count, StringSplitOptions options)
+        /// <summary>
+        /// See <see cref="string.Split(string[], int, StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="count"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public StringsSpliter Split([CanBeNull] string[] separator, int count, StringSplitOptions options = StringSplitOptions.None)
         {
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            this.EnsureNotNull();
-            return new StringsSpliter(this, separator, count, options);
+            return new StringsSpliter(ref this, separator, count, options);
         }
 
+        /// <summary>
+        /// See <see cref="string.Split(char[], StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public CharsSpliter Split(char ch, StringSplitOptions options = StringSplitOptions.None)
+        {
+            return new CharsSpliter(ref this, new[] { ch }, int.MaxValue, options);
+        }
+
+        /// <summary>
+        /// See <see cref="string.Split(char[])"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public CharsSpliter Split([CanBeNull] params char[] separator)
+        {
+            return new CharsSpliter(ref this, separator, int.MaxValue, StringSplitOptions.None);
+        }
+
+        /// <summary>
+        /// See <see cref="string.Split(char[], StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public CharsSpliter Split([CanBeNull] char[] separator, StringSplitOptions options)
+        {
+            return new CharsSpliter(ref this, separator, int.MaxValue, options);
+        }
+
+        /// <summary>
+        /// See <see cref="string.Split(char[], int, StringSplitOptions)"/>.
+        /// </summary>
+        /// <param name="separator"></param>
+        /// <param name="count"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [PublicAPI, Pure]
+        public CharsSpliter Split([CanBeNull] char[] separator, int count, StringSplitOptions options = StringSplitOptions.None)
+        {
+            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
+            return new CharsSpliter(ref this, separator, count, options);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
         public struct StringsSpliter : IEnumerable<StringSegment>
         {
             private readonly StringSegment _value;
@@ -85,21 +112,35 @@ namespace Jasily.Text
             private readonly StringSplitOptions _options;
             [CanBeNull] private readonly string[] _separators;
 
-            internal StringsSpliter(StringSegment value, [CanBeNull] string[] separators, int count, StringSplitOptions options)
+            internal StringsSpliter(ref StringSegment value, [CanBeNull] string[] separators, int count, StringSplitOptions options)
             {
+                Debug.Assert(count >= 0);
+                if (options != StringSplitOptions.None && options != StringSplitOptions.RemoveEmptyEntries)
+                {
+                    throw new ArgumentException();
+                }
+                value.EnsureNotNull();
+
                 this._separators = separators;
                 this._value = value;
                 this._count = count;
                 this._options = options;
             }
 
+            /// <summary>
+            /// Returns an enumerator that iterates through the collection.
+            /// </summary>
+            /// <returns>An enumerator that can be used to iterate through the collection.</returns>
             public Enumerator GetEnumerator() => new Enumerator(ref this);
 
             IEnumerator<StringSegment> IEnumerable<StringSegment>.GetEnumerator() => this.GetEnumerator();
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 
-            public struct Enumerator : IEnumerator<StringSegment>, ISpiterEnumerator
+            /// <summary>
+            /// Enumerator for <see cref="StringsSpliter"/>.
+            /// </summary>
+            public struct Enumerator : IEnumerator<StringSegment>
             {
                 private readonly StringSegment _value;
                 private readonly int _limit;
@@ -127,13 +168,15 @@ namespace Jasily.Text
                     this._nextIndexCache = this._separators?.Length > 0 ? new int[this._separators.Length] : null;
                 }
 
+                /// <inheritdoc />
                 public StringSegment Current { get; private set; }
 
                 object IEnumerator.Current => this.Current;
 
+                /// <inheritdoc />
                 public bool MoveNext()
                 {
-                    if (!SpliterHelper.HasNext(ref this))
+                    if (this._value.Buffer == null || this._count >= this._limit)
                     {
                         this.Current = default(StringSegment);
                         return false;
@@ -163,7 +206,7 @@ namespace Jasily.Text
                         {
                             this._index = next + 1;
                         }
-                        else if (this._limit >= 0 && this._count == this._limit - 1)
+                        else if (this._count == this._limit - 1)
                         {
                             return this.SliceToEnd();
                         }
@@ -222,72 +265,32 @@ namespace Jasily.Text
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 private bool SliceToEnd()
                 {
-                    if (SpliterHelper.HasEnd(ref this))
-                    {
-                        return this.SliceTo(this._value.Length, null);
-                    }
-                    else
+                    var valLen = this._value.Length;
+
+                    if (this._index > valLen ||
+                        valLen == this._index && this._options == StringSplitOptions.RemoveEmptyEntries)
                     {
                         this.Current = default(StringSegment);
                         return false;
                     }
+
+                    return this.SliceTo(this._value.Length, null);
                 }
+
+                /// <summary>
+                /// Throw <see cref="NotSupportedException"/>.
+                /// </summary>
+                /// <exception cref="NotSupportedException"></exception>
+                public void Reset() => throw new NotSupportedException();
 
                 /// <inheritdoc />
-                public void Reset()
-                {
-                    this.Current = default(StringSegment);
-                    this._index = 0;
-                    this._count = 0;
-                    if (this._nextIndexCache != null)
-                    {
-                        Array.Clear(this._nextIndexCache, 0, this._nextIndexCache.Length);
-                    }
-                }
-
                 public void Dispose() { }
-
-                #region ISpiterEnumerator
-
-                StringSegment ISpiterEnumerator.Value => this._value;
-
-                int ISpiterEnumerator.Count => this._count;
-
-                int ISpiterEnumerator.Limit => this._limit;
-
-                int ISpiterEnumerator.Index => this._index;
-
-                StringSplitOptions ISpiterEnumerator.Options => this._options;
-
-                #endregion
             }
         }
 
-        public CharsSpliter Split(char ch)
-        {
-            this.EnsureNotNull();
-            return new CharsSpliter(this, new[] { ch }, -1, StringSplitOptions.None);
-        }
-
-        public CharsSpliter Split([CanBeNull] params char[] separator)
-        {
-            this.EnsureNotNull();
-            return new CharsSpliter(this, separator, -1, StringSplitOptions.None);
-        }
-
-        public CharsSpliter Split([CanBeNull] char[] separator, StringSplitOptions options)
-        {
-            this.EnsureNotNull();
-            return new CharsSpliter(this, separator, -1, options);
-        }
-
-        public CharsSpliter Split([CanBeNull] char[] separator, int count, StringSplitOptions options = StringSplitOptions.None)
-        {
-            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
-            this.EnsureNotNull();
-            return new CharsSpliter(this, separator, count, options);
-        }
-
+        /// <summary>
+        /// 
+        /// </summary>
         public struct CharsSpliter : IEnumerable<StringSegment>
         {
             private readonly StringSegment _value;
@@ -295,21 +298,35 @@ namespace Jasily.Text
             private readonly StringSplitOptions _options;
             [CanBeNull] private readonly char[] _separators;
 
-            internal CharsSpliter(StringSegment value, [CanBeNull] char[] separators, int count, StringSplitOptions options)
+            internal CharsSpliter(ref StringSegment value, [CanBeNull] char[] separators, int count, StringSplitOptions options)
             {
+                Debug.Assert(count >= 0);
+                if (options != StringSplitOptions.None && options != StringSplitOptions.RemoveEmptyEntries)
+                {
+                    throw new ArgumentException();
+                }
+                value.EnsureNotNull();
+
                 this._separators = separators;
                 this._value = value;
                 this._count = count;
                 this._options = options;
             }
 
+            /// <summary>
+            /// Returns an enumerator that iterates through the collection.
+            /// </summary>
+            /// <returns>An enumerator that can be used to iterate through the collection.</returns>
             public Enumerator GetEnumerator() => new Enumerator(ref this);
 
             IEnumerator<StringSegment> IEnumerable<StringSegment>.GetEnumerator() => this.GetEnumerator();
 
             IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-
-            public struct Enumerator : IEnumerator<StringSegment>, ISpiterEnumerator
+            
+            /// <summary>
+            /// Enumerator for <see cref="T:Jasily.Text.StringSegment.CharsSpliter" />.
+            /// </summary>
+            public struct Enumerator : IEnumerator<StringSegment>
             {
                 private readonly StringSegment _value;
                 private readonly int _limit;
@@ -320,22 +337,29 @@ namespace Jasily.Text
 
                 internal Enumerator(ref CharsSpliter tokenizer)
                 {
-                    this._separators = tokenizer._separators;
+                    // value
                     this._value = tokenizer._value;
+
+                    // argd
+                    this._limit = tokenizer._count;
                     this._options = tokenizer._options;
+                    this._separators = tokenizer._separators;
+
+                    // init
                     this.Current = default(StringSegment);
                     this._index = 0;
                     this._count = 0;
-                    this._limit = this._separators?.Length == 0 ? Math.Min(1, tokenizer._count) : tokenizer._count;
                 }
 
+                /// <inheritdoc />
                 public StringSegment Current { get; private set; }
 
                 object IEnumerator.Current => this.Current;
 
+                /// <inheritdoc />
                 public bool MoveNext()
                 {
-                    if (!SpliterHelper.HasNext(ref this))
+                    if (this._value.Buffer == null || this._count >= this._limit)
                     {
                         this.Current = default(StringSegment);
                         return false;
@@ -367,7 +391,7 @@ namespace Jasily.Text
                         {
                             this._index++;
                         }
-                        else if (this._limit >= 0 && this._count == this._limit - 1)
+                        else if (this._count == this._limit - 1)
                         {
                             return this.SliceToEnd();
                         }
@@ -390,39 +414,26 @@ namespace Jasily.Text
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 private bool SliceToEnd()
                 {
-                    if (SpliterHelper.HasEnd(ref this))
-                    {
-                        return this.SliceTo(this._value.Length);
-                    }
-                    else
+                    var valLen = this._value.Length;
+
+                    if (this._index > valLen ||
+                        valLen == this._index && this._options == StringSplitOptions.RemoveEmptyEntries)
                     {
                         this.Current = default(StringSegment);
                         return false;
                     }
+
+                    return this.SliceTo(this._value.Length);
                 }
 
-                public void Reset()
-                {
-                    this.Current = default(StringSegment);
-                    this._index = 0;
-                    this._count = 0;
-                }
+                /// <summary>
+                /// Throw <see cref="NotSupportedException"/>.
+                /// </summary>
+                /// <exception cref="NotSupportedException"></exception>
+                public void Reset() => throw new NotSupportedException();
 
+                /// <inheritdoc />
                 public void Dispose() { }
-
-                #region ISpiterEnumerator
-
-                StringSegment ISpiterEnumerator.Value => this._value;
-
-                int ISpiterEnumerator.Count => this._count;
-
-                int ISpiterEnumerator.Limit => this._limit;
-
-                int ISpiterEnumerator.Index => this._index;
-
-                StringSplitOptions ISpiterEnumerator.Options => this._options;
-
-                #endregion
             }
         }
     }

@@ -35,11 +35,11 @@ namespace Jasily.Text.Test
                 var str = sample.Item1;
                 var ss = sample.Item2;
 
-                foreach (var separator in Separators())
+                foreach (var count in Count())
                 {
                     foreach (var option in Options())
                     {
-                        foreach (var count in Count())
+                        foreach (var separator in Separators())
                         {
                             if (str == null)
                             {
@@ -90,11 +90,11 @@ namespace Jasily.Text.Test
                 var str = sample.Item1;
                 var ss = sample.Item2;
 
-                foreach (var separator in Separators())
+                foreach (var count in Count())
                 {
                     foreach (var option in Options())
                     {
-                        foreach (var count in Count())
+                        foreach (var separator in Separators())
                         {
                             if (str == null)
                             {
